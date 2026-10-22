@@ -11,7 +11,7 @@ on:
 
 jobs:
     build-and-publish:
-        runs-on: ubuntu-26.04
+        runs-on: selfhosted-linux
         permissions:
           contents: read
           packages: write
@@ -19,40 +19,43 @@ jobs:
             fail-fast: false
             matrix:
                 include:
-                    - php: "8.4"
-                      product-version: "~4.6.x-dev"
+                    - php: "8.3"
+                      # product-version: "~4.6.x-dev"
                       node: "22"
                     - php: "8.4"
-                      product-version: "~5.0.x-dev"
+                      # product-version: "~4.6.x-dev"
                       node: "22"
-                    - php: "8.5"
-                      product-version: "~6.0.x-dev"
-                      node: "22"
-                      behat-config: "behat_ibexa_oss.php"
+                    # - php: "8.4"
+                    #   product-version: "~5.0.x-dev"
+                    #   node: "22"
+                    # - php: "8.5"
+                    #   product-version: "~6.0.x-dev"
+                    #   node: "22"
+                    #   behat-config: "behat_ibexa_oss.php"
 
         steps:
             - uses: actions/checkout@v7
             - name: Build image
               run: bin/ci/build.sh ${{ matrix.php }} ${{ matrix.node }}
-            - name: Generate token
-              id: generate_token
-              uses: actions/create-github-app-token@v3
-              with:
-                client-id: ${{ secrets.AUTOMATION_CLIENT_ID }}
-                private-key: ${{ secrets.AUTOMATION_CLIENT_SECRET }}
-            - name: Test image
-              run: bin/ci/test.sh
-              continue-on-error: ${{ inputs.force != '' }}
-              env:
-                TEST_CMD: "vendor/bin/behat -v --profile=browser --suite=admin-ui --tags=@richtext --config=${{ matrix.behat-config || 'behat_ibexa_oss.yaml' }}"
-                PRODUCT_VERSION: ${{ matrix.product-version }}
-                COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ steps.generate_token.outputs.token }}"}}'
-            - name: Log in to the Container registry
-              uses: docker/login-action@v4
-              with:
-                registry: ghcr.io
-                username: ${{ github.actor }}
-                password: ${{ secrets.GITHUB_TOKEN }}
+            # - name: Generate token
+            #   id: generate_token
+            #   uses: actions/create-github-app-token@v3
+            #   with:
+            #     client-id: ${{ secrets.AUTOMATION_CLIENT_ID }}
+            #     private-key: ${{ secrets.AUTOMATION_CLIENT_SECRET }}
+            # - name: Test image
+            #   run: bin/ci/test.sh
+            #   continue-on-error: ${{ inputs.force != '' }}
+            #   env:
+            #     TEST_CMD: "vendor/bin/behat -v --profile=browser --suite=admin-ui --tags=@richtext --config=${{ matrix.behat-config || 'behat_ibexa_oss.yaml' }}"
+            #     PRODUCT_VERSION: ${{ matrix.product-version }}
+            #     COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ steps.generate_token.outputs.token }}"}}'
+            # - name: Log in to the Container registry
+            #   uses: docker/login-action@v4
+            #   with:
+            #     registry: ghcr.io
+            #     username: ${{ github.actor }}
+            #     password: ${{ secrets.GITHUB_TOKEN }}
             - name: Push image
               if: github.event_name == 'workflow_dispatch'
-              run: bin/ci/push.sh ghcr.io/ibexa/docker/php
+              run: bin/ci/push.sh hub.raumobil.net/ibexa-php
