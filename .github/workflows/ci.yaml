@@ -19,6 +19,9 @@ jobs:
             fail-fast: false
             matrix:
                 include:
+                    - php: "8.2"
+                      # product-version: "~4.6.x-dev"
+                      node: "22"
                     - php: "8.3"
                       # product-version: "~4.6.x-dev"
                       node: "22"
